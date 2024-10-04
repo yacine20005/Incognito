@@ -1,4 +1,4 @@
-# Projet-Prog-C# Inititation à la Programmation C - Devoir maison - L2
+# Inititation à la Programmation C - Devoir maison - L2
 
 ## Incognito
 
