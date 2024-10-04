@@ -1,34 +1,56 @@
-# include <stdio.h>
-# define T 5
+#include <stdio.h>
+#include "types.h"
 
-int calculer_pion(int t) {
+int calculer_pion(int t)
+{
     int N;
-    N = (((t - 1) * (t - 2))/2) - 1;
+    N = (((t - 1) * (t - 2)) / 2) - 1;
     return N;
 }
-
-int generer_plateau(int t) {
-    int plateau[t][t];
-    for (int i = 0; i < t; i++) {
-        for (int j = 0; j < t; j++) {
-            plateau[i][j] = 0;
+void generer_plateau(int t, int plateau[t][t])
+{
+    for (int i = 0; i < t; i++)
+    {
+        for (int j = 0; j < t; j++)
+        {
+            plateau[i][j] = '.';
         }
     }
-    return plateau;
 }
 
-int placer_chateau(int plateau, int t) {
-    plateau[t/2][t/2] = 1;
-    return plateau;
+void placer_chateau(int t, int plateau[t][t])
+{
+    plateau[0][0] = 'C';
+    plateau[t - 1][t - 1] = 'C';
 }
 
-int main() {
+void afficher_plateau(int t, int plateau[t][t])
+{
+    for (int i = 0; i < t; i++)
+    {
+        for (int j = 0; j < t; j++)
+        {
+            printf("%c", plateau[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+int main()
+{
     int t = T;
-    if (t >= 8) {
+    if (t >= 8)
+    {
         printf("La taille du plateau est trop grande\n");
         return 1;
     }
-    int N = calculer_pion(t);
-    printf("Le nombre de pions sur le plateau est de %d\n", N);
+    int pion, plateau[T][T];
+    pion = calculer_pion(T);
+    printf("Le nombre de pions sur le plateau est de %d\n", pion);
+    generer_plateau(T, plateau);
+    afficher_plateau(T, plateau);
+    placer_chateau(T, plateau);
+    afficher_plateau(T, plateau);
     return 0;
 }
