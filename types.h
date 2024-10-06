@@ -11,7 +11,8 @@ typedef enum _couleur
 typedef enum _type
 {
     CHEVALIER,
-    ESPION
+    ESPION,
+    CHATEAU
 } Type;
 
 typedef struct _pion
