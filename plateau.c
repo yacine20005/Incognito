@@ -1,7 +1,13 @@
 #include <stdio.h>
 #include "types.h"
 
-void generer_plateau(int t, int plateau[t][t])
+#define T 5
+
+int directions_haut[3][2] = {{0, 1}, {1, 0}, {1, 1}}; // Les directions où il est possible de placer les pions pour le château en haut à gauche
+
+int directions_bas[3][2] = {{0, -1}, {-1, 0}, {-1, -1}}; // même chose pour le château en bas à droite
+
+void generer_plateau(int t, int plateau[t][t]) 
 {
     for (int i = 0; i < t; i++)
     {
@@ -25,25 +31,28 @@ void placer_chateau(int t, int plateau[t][t])
     plateau[t - 1][t - 1] = 'C';
 }
 
+void placer_pions_autour_chateau(int t, int plateau[t][t], int x, int y, int pion, int directions[3][2])
+{
+    for (int k = 1; k < 8 && pion > 0; k++)
+    {
+        for (int i = 0; i < 8 && pion > 0; i++)
+        {
+            int nx = x + (directions[i][0] * k);
+            int ny = y + (directions[i][1] * k);
+            if (nx >= 0 && nx < t && ny >= 0 && ny < t && plateau[nx][ny] == '.')
+            {
+                plateau[nx][ny] = 'P';
+                printf("Pion placé en (%d), (%d) et il reste %d pion en boucle numéro :%d \n", nx, ny, pion, i);
+                pion--;
+            }
+        }
+    }
+}
+
 void placer_pion(int t, int plateau[t][t], int pion)
 {
-    int k = 0;
-    int x = 1;
-    int y = 1;
-    while (pion > 0)
-    {
-        if (k % 2)
-        {
-            plateau[0][0 + x] = 'P';
-            x++;
-        }
-        else
-        {
-            plateau[0 + y][0] = 'P';
-            y++;
-        }
-        k++;
-    }
+    placer_pions_autour_chateau(t, plateau, 0, 0, pion, directions_haut);
+    placer_pions_autour_chateau(t, plateau, t - 1, t - 1, pion, directions_bas);
 }
 
 void afficher_plateau(int t, int plateau[t][t])
