@@ -59,6 +59,11 @@ void placer_chevalier(int t, Pion plateau[t][t], int chevalier) //Pour placer le
     placer_chevalier_autour_chateau(t, plateau, t - 1, t - 1, chevalier, directions_bas, NOIR);
 }
 
+void choisir_espion(int t, Pion plateau[t][t])
+{
+    //Il faut choisir aléatoirement un chevalier parmis les deux camps pour que ce soit des espions
+}
+
 void afficher_plateau(int t, Pion plateau[t][t])
 {
     for (int i = 0; i < t; i++)
