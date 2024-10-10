@@ -1,5 +1,7 @@
 #include <stdio.h> //Tjr là tjr présent
 #include "types.h" //Flm de mettre les types ici donc je les ai mis dans un autre fichier
+#include <time.h> 
+#include <stdlib.h.>
 
 #define T 5 //taille du plateau TxT
 
@@ -36,6 +38,9 @@ void placer_chateau(int t, Pion plateau[t][t])
 
 void placer_chevalier_autour_chateau(int t, Pion plateau[t][t], int x, int y, int chevalier, int directions[3][2], Couleur Couleur)
 {
+    srand(time(NULL));
+    int nbrandomblanc = rand() %chevalier;
+    int nbrandomnoir = rand() %chevalier;
     for (int k = 1; k < 8 && chevalier > 0; k++)
     {
         for (int i = 0; i < 8 && chevalier > 0; i++)
@@ -44,7 +49,12 @@ void placer_chevalier_autour_chateau(int t, Pion plateau[t][t], int x, int y, in
             int ny = y + (directions[i][1] * k); // et si tout est rempli on essaie d'aller un cran plus loin avec k
             if (nx >= 0 && nx < t && ny >= 0 && ny < t && plateau[nx][ny].type == -1) //On verifie si on est sur le plateau et si la case est pas déjà occupé par un frero
             {
-                plateau[nx][ny].type = CHEVALIER;
+                if (chevalier == nbrandomblanc && Couleur == BLANC)
+                    plateau[nx][ny].type = ESPION;
+                else if (chevalier == nbrandomnoir && Couleur == NOIR)
+                    plateau[nx][ny].type = ESPION;
+                else
+                    plateau[nx][ny].type = CHEVALIER;
                 plateau[nx][ny].couleur = Couleur;
                 printf("Chevalier placé en (%d), (%d) et il reste %d chevalier en boucle numéro :%d \n", nx, ny, chevalier, i);
                 chevalier--;
@@ -80,7 +90,7 @@ void afficher_plateau(int t, Pion plateau[t][t])
             }
             else if (plateau[i][j].type == ESPION)
             {
-                printf(plateau[i][j].couleur == BLANC ? "e" : "e");
+                printf(plateau[i][j].couleur == BLANC ? "e" : "M");
             }
             else if (plateau[i][j].type == CHATEAU)
             {

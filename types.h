@@ -8,6 +8,7 @@ typedef enum _couleur
     BLANC,
     NOIR
 } Couleur;
+
 typedef enum _type
 {
     CHEVALIER,
@@ -17,9 +18,10 @@ typedef enum _type
 
 typedef struct _pion
 {
-    Type type;
+    Type type; //chevalier ou espion?
     Couleur couleur;
 } Pion;
+
 typedef struct
 {
     int x, y;
