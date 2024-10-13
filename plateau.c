@@ -60,25 +60,21 @@ void possibilite(int x, int y, int t, Pion plateau[t][t], char actionpossible[3]
             int relativeY = 1 + directionpossible[i][1];
 
             // Gérer les différents types de cases du plateau
-            switch (plateau[newx][newy].type)
-            {
-            case CHATEAU:                                   // Case vide ou non accessible
-                actionpossible[relativeY][relativeX] = 'C'; // Déplacement possible
-                break;
-            case ESPION:
-            case CHEVALIER:
-                if (couleur_to_string(plateau[newx][newy].couleur) == couleur)
-                {
-                    actionpossible[relativeY][relativeX] = 'F'; // Ami
-                }
-                else
-                {
-                    actionpossible[relativeY][relativeX] = 'I'; // Ennemi
-                }
-                break;
-            default:
-                actionpossible[relativeY][relativeX] = 'D'; // Pas d'action possible (vide)
-                break;
+            switch(plateau[newy][newx].type) {
+                case CHATEAU:
+                    actionpossible[relativeY][relativeX] = 'C'; 
+                    break;
+                case ESPION:
+                case CHEVALIER:
+                     if(couleur_to_string(plateau[newx][newy].couleur)==couleur) {
+                        actionpossible[relativeY][relativeX] = 'F'; // Ami
+                    } else {
+                        actionpossible[relativeY][relativeX] = 'I'; // Ennemi
+                    }
+                    break;
+                default:
+                    actionpossible[relativeY][relativeX] = 'D'; 
+                    break;
             }
         }
     }
