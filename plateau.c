@@ -224,8 +224,8 @@ int main()
         scanf("%d", &pionselectionne[0]);
         scanf("%d", &pionselectionne[1]);
         printf("La piece selectionnee est (%d,%d)", pionselectionne[0], pionselectionne[1]);
-        while((pionselectionne[0] < 0 || pionselectionne[0] > T) || (pionselectionne[1] < 0 || pionselectionne[1] > T)){
-            printf("Entree invalide veuillez recommencez \n");
+        while((pionselectionne[0] < 0 || pionselectionne[0] > T) || (pionselectionne[1] < 0 || pionselectionne[1] > T) || (plateau[i][j].type != (CHEVALIER || ESPION) && couleur_to_string(plateau[Y][X].couleur)==tour[0])){
+            printf("Entree invalide veuillez recommencez \n (Soit ce n'est pas un pion de votre couleur, soit l'entrée est hors du plateau)");
             printf("\n Joueur %s, quelle pion voulez vous selectionner (Format : X Y ) : ", tour[0]);
             vider_buffer(); // temporairement c'est chagpt qui l'as fait prcq la boucle infinie elle clc
             //fflush(stdin) ; le prof avait dit de use ca mais ca marchais pas.
