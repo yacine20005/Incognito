@@ -50,9 +50,9 @@ void possibilite(int x, int y, int t, Pion plateau[t][t], char actionpossible[3]
             int relativeY = 1 + directionpossible[i][1];
 
             // Gérer les différents types de cases du plateau
-            switch(plateau[newx][newy].type) {
-                case CHATEAU: // Case vide ou non accessible
-                    actionpossible[relativeY][relativeX] = 'C'; // Déplacement possible
+            switch(plateau[newy][newx].type) {
+                case CHATEAU:
+                    actionpossible[relativeY][relativeX] = 'C'; 
                     break;
                 case ESPION:
                 case CHEVALIER:
@@ -63,7 +63,7 @@ void possibilite(int x, int y, int t, Pion plateau[t][t], char actionpossible[3]
                     }
                     break;
                 default:
-                    actionpossible[relativeY][relativeX] = 'D'; // Pas d'action possible (vide)
+                    actionpossible[relativeY][relativeX] = 'D'; 
                     break;
             }
         }
@@ -224,7 +224,7 @@ int main()
         scanf("%d", &pionselectionne[0]);
         scanf("%d", &pionselectionne[1]);
         printf("La piece selectionnee est (%d,%d)", pionselectionne[0], pionselectionne[1]);
-        while((pionselectionne[0] < 0 || pionselectionne[0] > T) || (pionselectionne[1] < 0 || pionselectionne[1] > T) || (plateau[i][j].type != (CHEVALIER || ESPION) && couleur_to_string(plateau[Y][X].couleur)==tour[0])){
+        while((pionselectionne[0] < 0 || pionselectionne[0] > T) || (pionselectionne[1] < 0 || pionselectionne[1] > T) || (plateau[pionselectionne[1]][pionselectionne[0]].type != (CHEVALIER || ESPION) && couleur_to_string(plateau[pionselectionne[1]][0].couleur)==tour[0])){
             printf("Entree invalide veuillez recommencez \n (Soit ce n'est pas un pion de votre couleur, soit l'entrée est hors du plateau)");
             printf("\n Joueur %s, quelle pion voulez vous selectionner (Format : X Y ) : ", tour[0]);
             vider_buffer(); // temporairement c'est chagpt qui l'as fait prcq la boucle infinie elle clc
