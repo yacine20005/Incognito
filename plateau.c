@@ -1,7 +1,7 @@
 #include <stdio.h> //Tjr là tjr présent
 #include "types.h" //Flm de mettre les types ici donc je les ai mis dans un autre fichier
 #include <time.h>
-#include <stdlib.h.>
+#include <stdlib.h>
 #include <string.h>
 
 #define T 5 // taille du plateau TxT
@@ -12,9 +12,9 @@ int directions_bas[3][2] = {{0, -1}, {-1, 0}, {-1, -1}}; // même chose pour le 
 
 int changementdetour(int t, char *tour[t])
 {
-    char *tmp = tour[0];
+    char tmp = *tour[0];
     *tour[0] = *tour[1];
-    *tour[1] = *tmp;
+    *tour[1] = tmp;
 }
 
 char *couleur_to_string(Couleur c)
@@ -30,63 +30,95 @@ char *couleur_to_string(Couleur c)
     }
 }
 
-void possibilite(int x, int y, int t, Pion plateau[t][t], char actionpossible[3][3], char *couleur)
-{
-    /* prend en paramètre les coordonnées du pion que l'on veut checker */
-    int directionpossible[8][2] = {{-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}};
-
-    // Initialiser actionpossible avec des cases vides (ou autre valeur par défaut)
-    for (int i = 0; i < 3; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            actionpossible[i][j] = 'Y';
-        }
-    }
-
-    // Le pion de référence est au centre du tableau 3x3
-    actionpossible[1][1] = 'X'; // Par exemple 'X' pour indiquer le pion lui-même
-
-    // Parcourir les directions autour du pion
-    for (int i = 0; i < 8; i++)
-    {
-        int newx = x + directionpossible[i][0];
-        int newy = y + directionpossible[i][1];
-
-        // Vérification des limites du plateau
-        if (newx >= 0 && newx < t && newy >= 0 && newy < t)
-        {
-            int relativeX = 1 + directionpossible[i][0]; // Calcul de l'index relatif pour actionpossible
-            int relativeY = 1 + directionpossible[i][1];
-
-            // Gérer les différents types de cases du plateau
-            switch(plateau[newx][newy].type) {
-                case CHATEAU: // Case vide ou non accessible
-                    actionpossible[relativeY][relativeX] = 'C'; // Déplacement possible
-                    break;
-                case ESPION:
-                case CHEVALIER:
-                     if(couleur_to_string(plateau[newx][newy].couleur)==couleur) {
-                        actionpossible[relativeY][relativeX] = 'F'; // Ami
-                    } else {
-                        actionpossible[relativeY][relativeX] = 'I'; // Ennemi
-                    }
-                    break;
-                default:
-                    actionpossible[relativeY][relativeX] = 'D'; // Pas d'action possible (vide)
-                    break;
-            }
+void reset_tab(int ligne, int colonne, int tab[ligne][colonne]) {
+    for (int i = 0; i < ligne; i++) {
+        for (int j = 0; j < colonne; j++) {
+            tab[i][j] = 0;
         }
     }
 }
+
+
+int deplacement_possible_bidirection(int x, int y, int t, Pion plateau[t][t], int actionpossible[T*4][2]) {
+    int index = 0;
+    // Déplacement à droite
+    for (int i = x + 1; i < t && plateau[y][i].type == -1; i++) {
+        actionpossible[index][0] = i;
+        actionpossible[index][1] = y;
+        index++;
+    }
+    // Déplacement à gauche
+    for (int i = x - 1; i >= 0 && plateau[y][i].type == -1; i--) {
+        actionpossible[index][0] = i;
+        actionpossible[index][1] = y;
+        index++;
+    }
+    // Déplacement vers le bas
+    for (int j = y + 1; j < t && plateau[j][x].type == -1; j++) {
+        actionpossible[index][0] = x;
+        actionpossible[index][1] = j;
+        index++;
+    }
+    // Déplacement vers le haut
+    for (int j = y - 1; j >= 0 && plateau[j][x].type == -1; j--) {
+        actionpossible[index][0] = x;
+        actionpossible[index][1] = j;
+        index++;
+    }
+    return index;
+}
+
+
+
+void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int actionpossible[T*4][2], int index){
+    int i =x;
+    int j = y;
+    while (i < t && j < t && plateau[j][i].type == -1) {
+        actionpossible[index][0] = i;
+        actionpossible[index][1] = j;
+        index +=1;
+        i+=1;
+        j+=1;
+        }  
+    i =x;    
+    while (i > 0 && j > 0 && plateau[j][i].type == -1) {
+        actionpossible[index][0] = i;
+        actionpossible[index][1] = j;
+        index +=1;
+        i+=1;
+        j-=1;
+        };
+    while (j < t && i > 0 &&plateau[j][i].type == -1) {
+        actionpossible[index][0] = i;
+        actionpossible[index][1] = j;
+        index +=1;
+        i-=1;
+        j-=1;
+        }
+    j = y;
+    while (j > 0 && i < t && plateau[j][i].type == -1) {
+        actionpossible[index][0] = i;
+        actionpossible[index][1] = j;
+        index +=1;
+        i -=1;
+        j +=1;
+        };
+};
+
+void deplacement_possible(int x, int y, int t, Pion plateau[t][t], int actionpossible[T*4][2]){
+    reset_tab(T*4, 2,actionpossible);
+    int index = deplacement_possible_bidirection(x, y, t, plateau, actionpossible);
+    deplacement_possible_diagonale(x, y, t, plateau, actionpossible, index);
+}
+
 
 int victoire(int t, Pion plateau[t][t], int nbtour)
 {
     /*
     Condition de victoire, parcoure tout le plateau et verifie s'il y a 2 espion ou pas,
     s'il y en a qu'un ou 0 la partie est fini donc on renvoie False, sinon True
-
     */
+
     if (nbtour > 2)
         return 0;
     int nbespion = 0;
@@ -133,7 +165,6 @@ void placer_chevalier_autour_chateau(int t, Pion plateau[t][t], int x, int y, in
     srand(time(NULL));
     int nbrandomblanc = rand() % chevalier + 1;
     int nbrandomnoir = rand() % chevalier + 1;
-    printf("\n \n \n %d, %d \n \n \n", nbrandomblanc, nbrandomnoir);
     for (int k = 1; k < 8 && chevalier > 0; k++)
     {
         for (int i = 0; i < 8 && chevalier > 0; i++)
@@ -149,7 +180,6 @@ void placer_chevalier_autour_chateau(int t, Pion plateau[t][t], int x, int y, in
                 else
                     plateau[nx][ny].type = CHEVALIER;
                 plateau[nx][ny].couleur = Couleur;
-                printf("Chevalier place en (%d), (%d) et il reste %d chevalier en boucle numero :%d \n", nx, ny, chevalier, i);
                 chevalier--;
             }
         }
@@ -190,14 +220,11 @@ void afficher_plateau(int t, Pion plateau[t][t])
     printf("\n");
 }
 
-void afficher_couppossible(char couppossible[3][3])
-{
-    for (int i = 0; i < 3; i++)
-    {
+void afficher_couppossible(int couppossible[T*4][2]) {
+    for (int i = 0; i < T*4; i++) {
         printf("\n");
-        for (int j = 0; j < 3; j++)
-        {
-            printf("%c", couppossible[i][j]);
+        for (int j = 0; j < 2; j++) {
+            printf(" %d", couppossible[i][j]);
         }
     }
 }
@@ -208,6 +235,8 @@ void vider_buffer()
     while ((c = getchar()) != '\n' && c != EOF)
         ; // Lire et ignorer tous les caractères jusqu'à la fin de la ligne
 }
+
+
 
 int main()
 {
@@ -228,27 +257,28 @@ int main()
     placer_chevalier(T, plateau, chevalier);
     printf("Bienvenue dans Incognito \n");
     afficher_plateau(T, plateau);
-    printf("%d \n", victoire(T, plateau, nbtour));
     while (victoire(T, plateau, nbtour) == 1)
     {
-        int pionselectionne[2];
-        char actionpossible[3][3]; // ordre [En Haut a gauche, haut mid, haut droite, mid gauche, mid mid, mid droite, bas gauche, bas mid, droite mid]
+        int pionselectionne[2] = {0,0};
+        int actionpossible[T*4][2]; 
         printf("\n Joueur %s, quelle pion voulez vous selectionner (Format : X Y ) : ", tour[0]);
         scanf("%d", &pionselectionne[0]);
         scanf("%d", &pionselectionne[1]);
-        printf("La piece selectionnee est (%d,%d)", pionselectionne[0], pionselectionne[1]);
-        while((pionselectionne[0] < 0 || pionselectionne[0] > T) || (pionselectionne[1] < 0 || pionselectionne[1] > T) || (plateau[pionselectionne[1]][pionselectionne[0]].type != (CHEVALIER || ESPION) && couleur_to_string(plateau[pionselectionne[1]][pionselectionne[0]].couleur)==tour[0])){
-            printf("Entree invalide veuillez recommencez \n (Soit ce n'est pas un pion de votre couleur, soit l'entrée est hors du plateau)");
+        printf("La piece selectionnee est (%d,%d)\n", pionselectionne[0], pionselectionne[1]);
+        while((plateau[pionselectionne[1]][pionselectionne[0]].type != CHEVALIER && plateau[pionselectionne[1]][pionselectionne[0]].type != ESPION)){
+            printf("Entree invalide veuillez recommencez \n (Soit ce n'est pas un pion de votre couleur, soit l'entree est hors du plateau)");
             printf("\n Joueur %s, quelle pion voulez vous selectionner (Format : X Y ) : ", tour[0]);
             vider_buffer(); // temporairement c'est chagpt qui l'as fait prcq la boucle infinie elle clc
             // fflush(stdin) ; le prof avait dit de use ca mais ca marchais pas.
             scanf("%d", &pionselectionne[0]);
-            scanf("%d", &pionselectionne[1]);
+            scanf("%d", &pionselectionne[1]); 
         }
-        possibilite(pionselectionne[0], pionselectionne[1], T, plateau, actionpossible, tour[0]);
+
+        deplacement_possible(pionselectionne[0], pionselectionne[1], T, plateau, actionpossible);
         printf("\n Les coups possible sont : \n");
         afficher_couppossible(actionpossible);
         nbtour += 1;
+
         changementdetour(2, tour);
     }
     return 0;
