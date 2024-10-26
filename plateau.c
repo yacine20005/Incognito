@@ -94,7 +94,7 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
     }
     i = x + 1;
     j = y -1;
-    while (i < t && j > 0 && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
+    while (i < t && j >= 0 && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = j;
@@ -104,7 +104,7 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
     };
     i = x - 1;
     j = y - 1;
-    while (j > 0 && i > 0 && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
+    while (j >= 0 && i >= 0 && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = j;
@@ -114,7 +114,7 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
     }
     i = x - 1;
     j = y + 1;
-    while (i > 0 && j < t && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
+    while (i >= 0 && j < t && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = j;
@@ -122,6 +122,29 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
         i -= 1;
         j += 1;
     };
+};
+
+int deplacer_pion(int x_depart, int y_depart, int t, Pion plateau[t][t], int actionpossible[T * 4][2], int x_arrive, int y_arrive)
+{
+    int i = 0;
+    while (actionpossible[i][0] != -1 && actionpossible[i][1] != -1)
+    {
+        if (actionpossible[i][0] == x_arrive && actionpossible[i][1] == y_arrive)
+        {
+            if(plateau[y_arrive][x_arrive].type == CHATEAU && plateau[y_depart][x_depart].type == CHEVALIER) {
+                plateau[y_depart][x_depart].type = -1;
+                plateau[y_depart][x_depart].couleur = -1;
+                return 0;
+            }
+            plateau[y_arrive][x_arrive].type = plateau[y_depart][x_depart].type;
+            plateau[y_arrive][x_arrive].couleur = plateau[y_depart][x_depart].couleur;
+            plateau[y_depart][x_depart].type = -1;
+            plateau[y_depart][x_depart].couleur = -1;
+            return 0;
+        }
+        i++;
+    }
+    return 1;
 };
 
 void deplacement_possible(int x, int y, int t, Pion plateau[t][t], int actionpossible[T * 4][2])
@@ -137,30 +160,16 @@ void interrogation_possible(int x, int y, int t, Pion plateau[t][t], int interro
     for(int i = 0; i<4; i++){
         int test_x = x +pos_a_verif[i][0];
         int test_y = y + pos_a_verif[i][1];
+        if(test_x >= 0 && test_x < t && test_y >= 0 && test_y < t){
         if((plateau[test_y][test_x].type == CHEVALIER || plateau[test_y][test_x].type == ESPION) && plateau[test_y][test_x].couleur != couleur) {
             interrogationpossible[i][0] = test_x ;
             interrogationpossible[i][1] = test_y ;
         }
+        }
     }
 }
 
-int deplacer_pion(int x_depart, int y_depart, int t, Pion plateau[t][t], int actionpossible[T * 4][2], int x_arrive, int y_arrive)
-{
-    int i = 0;
-    while (actionpossible[i][0] != -1 && actionpossible[i][1] != -1)
-    {
-        if (actionpossible[i][0] == x_arrive && actionpossible[i][1] == y_arrive)
-        {
-            plateau[y_arrive][x_arrive].type = plateau[y_depart][x_depart].type;
-            plateau[y_arrive][x_arrive].couleur = plateau[y_depart][x_depart].couleur;
-            plateau[y_depart][x_depart].type = -1;
-            plateau[y_depart][x_depart].couleur = -1;
-            return 0;
-        }
-        i++;
-    }
-    return 1;
-}
+
 
 int interroger_pion(int x, int y, int t, Pion plateau[t][t], int interrogationpossible[4][2], int x_enemie, int y_enemie, Couleur couleur) {
     for(int i =0; i < 4; i++){
