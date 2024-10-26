@@ -1,5 +1,5 @@
-#include <stdio.h> //Tjr là tjr présent
-#include "types.h" //Flm de mettre les types ici donc je les ai mis dans un autre fichier
+#include <stdio.h>
+#include "types.h" 
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,31 +45,32 @@ void reset_tab(int ligne, int colonne, int tab[ligne][colonne])
 }
 
 int deplacement_possible_bidirection(int x, int y, int t, Pion plateau[t][t], int actionpossible[T * 4][2])
-{
+{   
+    Couleur couleur = plateau[y][x].couleur;
     int index = 0;
     // Déplacement à droite
-    for (int i = x + 1; i < t && plateau[y][i].type == -1; i++)
+    for (int i = x + 1; i < t && (plateau[y][i].type == -1 || (plateau[y][i].type == CHATEAU && plateau[y][i].couleur != couleur)); i++)
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = y;
         index++;
     }
     // Déplacement à gauche
-    for (int i = x - 1; i >= 0 && plateau[y][i].type == -1; i--)
+    for (int i = x - 1; i >= 0 && (plateau[y][i].type == -1 || (plateau[y][i].type == CHATEAU && plateau[y][i].couleur != couleur)); i--)
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = y;
         index++;
     }
     // Déplacement vers le bas
-    for (int j = y + 1; j < t && plateau[j][x].type == -1; j++)
+    for (int j = y + 1; j < t && (plateau[j][x].type == -1 || (plateau[j][x].type == CHATEAU && plateau[j][x].couleur != couleur)); j++)
     {
         actionpossible[index][0] = x;
         actionpossible[index][1] = j;
         index++;
     }
     // Déplacement vers le haut
-    for (int j = y - 1; j >= 0 && plateau[j][x].type == -1; j--)
+    for (int j = y - 1; j >= 0 && (plateau[j][x].type == -1 || (plateau[j][x].type == CHATEAU && plateau[j][x].couleur != couleur)); j--)
     {
         actionpossible[index][0] = x;
         actionpossible[index][1] = j;
@@ -80,9 +81,10 @@ int deplacement_possible_bidirection(int x, int y, int t, Pion plateau[t][t], in
 
 void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int actionpossible[T * 4][2], int index)
 {
+    Couleur couleur = plateau[y][x].couleur;
     int i = x + 1;
     int j = y + 1;
-    while (i < t && j < t && plateau[j][i].type == -1)
+    while (i < t && j < t && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = j;
@@ -92,7 +94,7 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
     }
     i = x + 1;
     j = y -1;
-    while (i < t && j > 0 && plateau[j][i].type == -1)
+    while (i < t && j > 0 && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = j;
@@ -102,7 +104,7 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
     };
     i = x - 1;
     j = y - 1;
-    while (j > 0 && i > 0 && plateau[j][i].type == -1)
+    while (j > 0 && i > 0 && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = j;
@@ -112,7 +114,7 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
     }
     i = x - 1;
     j = y + 1;
-    while (i > 0 && j < t && plateau[j][i].type == -1)
+    while (i > 0 && j < t && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = j;
@@ -325,27 +327,55 @@ void vider_buffer()
         ; // Lire et ignorer tous les caractères jusqu'à la fin de la ligne
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    /*int chargerPartie = 0; // variable pour indiquer si on doit charger une partie
+    int sauvegarderPartie = 0; // variable pour indiquer si on doit sauvegarder chaque coup
+    FILE* fichierSauvegarde = NULL;
+    FILE* fichierChargement = NULL;
+    // Vérification des arguments de la ligne de commande
+    for (int i = 0; i < argc; i++) {
+        if (strcmp(argv[i], "-c") == 0 && i + 1 < argc) {
+            fichierChargement = fopen(argv[i + 1], "r");  // Ouvre le fichier pour charger la partie
+            if (fichierChargement == NULL) {
+                printf("Une erreur s'est produite pendant l'ouverture du fichier de chargemnt \n");
+                return 1;
+            }
+            chargerPartie = 1; // Active le chargement de la partie
+            i++;  // Saute l'argument suivant qui est le chemin
+        if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) {
+            fichierSauvegarde = fopen(argv[i + 1], "w");  // Ouvre le fichier de sauvegarde
+            if (fichierSauvegarde == NULL) {
+                printf("Une erreur s'est produite pendant l'ouverture du fichier de sauvegarde \n");
+                return 1;
+            }
+            sauvegarderPartie = 1; // Active la sauvegarde
+            i++;  // Saute l'argument suivant qui est le chemin
+        }
+        }
+    }*/
+
+
     int t = T;
     if (t >= 8) // On vérifie si T est pas plus grand que 8 car c'est interdit par la consigne
     {
         printf("La taille du plateau est trop grande\n");
         return 1;
     }
-    int nbtour = 0;
-    Couleur tour[] = {BLANC, NOIR};
-    /*int random=rand()%3+1;
-    for(int i = 0; i<random; i++){ (lignes qui choisis aleatoirement celui qui commence conformement a la consigne
-    changement_tour(2, tour);           enlever le temps des test)
-    }*/
+
+
+    Couleur tour[2] = {BLANC, NOIR};
+    int random=rand()%3+1;
+    for(int i = 0; i<random; i++){
+    changement_tour(2, tour);
+    }
     int chevalier;
     Pion plateau[T][T];
     chevalier = calculer_chevalier(T);
-    printf("Le nombre de chevalier sur le plateau est de %d\n", chevalier);
     generer_plateau(T, plateau);
     placer_chateau(T, plateau);
     placer_chevalier(T, plateau, chevalier);
+
     printf("Bienvenue dans Incognito \n");
     afficher_plateau(T, plateau);
     while (victoire(T, plateau) == 1)
@@ -409,7 +439,6 @@ int main()
             }
         };
         afficher_plateau(T, plateau);
-        nbtour += 1;
         changement_tour(2, tour);
     }
     return 0;
