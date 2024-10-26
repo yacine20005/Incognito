@@ -329,6 +329,7 @@ void vider_buffer()
 
 int main(int argc, char *argv[])
 {
+    srand(time(NULL));
     /*int chargerPartie = 0; // variable pour indiquer si on doit charger une partie
     int sauvegarderPartie = 0; // variable pour indiquer si on doit sauvegarder chaque coup
     FILE* fichierSauvegarde = NULL;
@@ -411,6 +412,11 @@ int main(int argc, char *argv[])
         printf("\n");
         printf("Choisissez entre deplacement et interrogation (d ou i) : ");
         scanf("%c", &moov[0]);
+        while(moov[0] != 'd' && moov[0] != 'i'){
+            printf("Entree invalide veuillez recommencez (d ou i) :  ");
+            vider_buffer(); // temporairement c'est chagpt qui l'as fait prcq la boucle infinie elle clc
+            scanf("%c", &moov[0]);
+        }
         vider_buffer();
         if(moov[0]=='d'){
             printf("Choisissez votre deplacement (Format : X Y ) : ");
