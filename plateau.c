@@ -216,9 +216,9 @@ int victoire(int t, Pion plateau[t][t])
         }
     }
     if(nbchateau < 2)
-        printf("\n \n Victoire des %s !\n \n", couleur_to_string(plateau[listechateau[0][1]][listechateau[0][0]].couleur));
+        printf("\n \n Victoire des %s, votre espion est rentrée dans le chateau !\n \n", couleur_to_string(plateau[listechateau[0][1]][listechateau[0][0]].couleur));
     else if(nbespion < 2)
-        printf("\n \n Victoire des %s !\n \n", couleur_to_string(plateau[listeespion[0][1]][listeespion[0][0]].couleur));
+        printf("\n \n Victoire des %s, vous avez demasquée l'espion adverse !\n \n", couleur_to_string(plateau[listeespion[0][1]][listeespion[0][0]].couleur));
     return nbespion == 2 ? 1 : 0;
 }
 
