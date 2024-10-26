@@ -185,7 +185,9 @@ int victoire(int t, Pion plateau[t][t])
     s'il y en a qu'un ou 0 la partie est fini donc on renvoie False, sinon True
     */
     int listeespion[2][2];
+    int listechateau[2][2];
     int nbespion = 0;
+    int nbchateau = 0;
     for (int y = 0; y < t; y++)
     {
         for (int x = 0; x < t; x++)
@@ -195,9 +197,16 @@ int victoire(int t, Pion plateau[t][t])
                 listeespion[nbespion][1] = y;
                 nbespion += 1;
             }
+            if (plateau[y][x].type == CHATEAU){
+                listechateau[nbchateau][0] = x;
+                listechateau[nbchateau][1] = y;
+                nbchateau += 1;
+            }
         }
     }
-    if(nbespion < 2)
+    if(nbchateau < 2)
+        printf("\n \n Victoire des %s !\n \n", couleur_to_string(plateau[listechateau[0][1]][listechateau[0][0]].couleur));
+    else if(nbespion < 2)
         printf("\n \n Victoire des %s !\n \n", couleur_to_string(plateau[listeespion[0][1]][listeespion[0][0]].couleur));
     return nbespion == 2 ? 1 : 0;
 }
@@ -265,11 +274,16 @@ void afficher_plateau(int t, Pion plateau[t][t])
 {
     for (int i = 0; i < t; i++)
     {
+        for (int a = 0; a < 2.2 * t; a++) {
+            printf("-");
+        }
+        printf("\n");
         for (int j = 0; j < t; j++)
         {
+            printf("|");
             if (plateau[i][j].type == -1)
             {
-                printf(".");
+                printf(" ");
             }
             else if (plateau[i][j].type == CHEVALIER)
             {
@@ -284,7 +298,11 @@ void afficher_plateau(int t, Pion plateau[t][t])
                 printf(plateau[i][j].couleur == BLANC ? "B" : "N");
             }
         }
+        printf("|");
         printf("\n");
+    }
+    for (int a = 0; a < 2.2 * T; a++) {
+        printf("-");
     }
     printf("\n");
 }
