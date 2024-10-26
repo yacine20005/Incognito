@@ -80,8 +80,8 @@ int deplacement_possible_bidirection(int x, int y, int t, Pion plateau[t][t], in
 
 void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int actionpossible[T * 4][2], int index)
 {
-    int i = x;
-    int j = y;
+    int i = x + 1;
+    int j = y + 1;
     while (i < t && j < t && plateau[j][i].type == -1)
     {
         actionpossible[index][0] = i;
@@ -90,7 +90,8 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
         i += 1;
         j += 1;
     }
-    i = x;
+    i = x + 1;
+    j = y -1;
     while (i > 0 && j > 0 && plateau[j][i].type == -1)
     {
         actionpossible[index][0] = i;
@@ -99,6 +100,8 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
         i += 1;
         j -= 1;
     };
+    i = x - 1;
+    j = y + 1;
     while (j < t && i > 0 && plateau[j][i].type == -1)
     {
         actionpossible[index][0] = i;
@@ -107,7 +110,8 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
         i -= 1;
         j -= 1;
     }
-    j = y;
+    i = x - 1;
+    j = y - 1;
     while (j > 0 && i < t && plateau[j][i].type == -1)
     {
         actionpossible[index][0] = i;
@@ -123,6 +127,19 @@ void deplacement_possible(int x, int y, int t, Pion plateau[t][t], int actionpos
     reset_tab(T * 4, 2, actionpossible);
     int index = deplacement_possible_bidirection(x, y, t, plateau, actionpossible);
     deplacement_possible_diagonale(x, y, t, plateau, actionpossible, index);
+}
+
+void interrogation_possible(int x, int y, int t, Pion plateau[t][t], int interrogationpossible[4][2], Couleur couleur) {
+    int pos_a_verif[4][2] = {{0,-1},{-1,0},{1,0},{0,1}};
+    reset_tab(4, 2, interrogationpossible);
+    for(int i = 0; i<4; i++){
+        x += pos_a_verif[i][0];
+        y += pos_a_verif[i][0];
+        if((plateau[y][x].type == CHEVALIER || plateau[y][x].type == ESPION) && plateau[y][x].couleur != couleur) {
+            interrogationpossible[i][0] = x ;
+            interrogationpossible[i][1] = y ;
+        }
+    }
 }
 
 int deplacer_pion(int x_depart, int y_depart, int t, Pion plateau[t][t], int actionpossible[T * 4][2], int x_arrive, int y_arrive)
@@ -251,9 +268,9 @@ void afficher_plateau(int t, Pion plateau[t][t])
     printf("\n");
 }
 
-void afficher_couppossible(int couppossible[T * 4][2])
+void afficher_couppossible(int taille, int couppossible[taille][2])
 {
-    for (int i = 0; i < T * 4; i++)
+    for (int i = 0; i < taille; i++)
     {
         if (couppossible[i][0] != -1 || couppossible[i][1] != -1)
         {
@@ -277,7 +294,7 @@ int main()
         printf("La taille du plateau est trop grande\n");
         return 1;
     }
-    printf("Taille valide \n");
+    //printf("Taille valide \n");
     int nbtour = 0;
     Couleur tour[] = {BLANC, NOIR};
     int chevalier;
@@ -294,10 +311,13 @@ int main()
         int pionselectionne[2] = {0, 0};
         int pion_arrive[2] = {0, 0};
         int actionpossible[T * 4][2];
+        int interrogationpossible[4][2];
+        char moov[1];
         printf("\n Joueur %s, quelle pion voulez vous selectionner (Format : X Y ) : ", couleur_to_string(tour[0]));
 
         scanf("%d", &pionselectionne[0]);
         scanf("%d", &pionselectionne[1]);
+        vider_buffer();
         printf("La piece selectionnee est (%d,%d)\n", pionselectionne[0], pionselectionne[1]);
 
         while ((plateau[pionselectionne[1]][pionselectionne[0]].type != CHEVALIER && plateau[pionselectionne[1]][pionselectionne[0]].type != ESPION) ||
@@ -307,25 +327,38 @@ int main()
             printf("Entree invalide veuillez recommencez \n (Soit ce n'est pas un pion de votre couleur, soit l'entree est hors du plateau)");
             printf("\n Joueur %s, quelle pion voulez vous selectionner (Format : X Y ) : ", couleur_to_string(tour[0]));
             vider_buffer(); // temporairement c'est chagpt qui l'as fait prcq la boucle infinie elle clc
-            // fflush(stdin) ; le prof avait dit de use ca mais ca marchais pas.
             scanf("%d", &pionselectionne[0]);
             scanf("%d", &pionselectionne[1]);
         }
 
         deplacement_possible(pionselectionne[0], pionselectionne[1], T, plateau, actionpossible);
+        interrogation_possible(pionselectionne[0], pionselectionne[1], T, plateau, interrogationpossible, tour[0]);
         printf("\n Les coups possible sont : \n");
-        afficher_couppossible(actionpossible);
+        afficher_couppossible(T*4, actionpossible);
         printf("\n");
-        printf("Choisissez votre deplacement (Format : X Y ) : ");
-        scanf("%d", &pion_arrive[0]);
-        scanf("%d", &pion_arrive[1]);
-        while (deplacer_pion(pionselectionne[0], pionselectionne[1], T, plateau, actionpossible, pion_arrive[0], pion_arrive[1]))
-        {
-            printf("Deplacement impossible\n");
+        printf("\n Les interrogation possible sont : \n");
+        afficher_couppossible(4, interrogationpossible);
+        printf("\n");
+        printf("Choisissez entre deplacement et interrogation (d ou i) : ");
+        scanf("%c", &moov[0]);
+        vider_buffer();
+        printf("%c", moov[0]);
+        if(moov[0]=='d'){
             printf("Choisissez votre deplacement (Format : X Y ) : ");
             scanf("%d", &pion_arrive[0]);
             scanf("%d", &pion_arrive[1]);
+            while (deplacer_pion(pionselectionne[0], pionselectionne[1], T, plateau, actionpossible, pion_arrive[0], pion_arrive[1]))
+            {
+                printf("Deplacement impossible\n");
+                printf("Choisissez votre deplacement (Format : X Y ) : ");
+                vider_buffer();
+                scanf("%d", &pion_arrive[0]);
+                scanf("%d", &pion_arrive[1]);
+            }
         }
+        else if(moov[0]=='i'){
+            printf("scoobymachine");
+        };
         afficher_plateau(T, plateau);
         nbtour += 1;
         changement_tour(2, tour);
