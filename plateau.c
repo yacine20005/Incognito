@@ -92,7 +92,7 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
     }
     i = x + 1;
     j = y -1;
-    while (i > 0 && j > 0 && plateau[j][i].type == -1)
+    while (i < t && j > 0 && plateau[j][i].type == -1)
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = j;
@@ -101,8 +101,8 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
         j -= 1;
     };
     i = x - 1;
-    j = y + 1;
-    while (j < t && i > 0 && plateau[j][i].type == -1)
+    j = y - 1;
+    while (j > 0 && i > 0 && plateau[j][i].type == -1)
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = j;
@@ -111,8 +111,8 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
         j -= 1;
     }
     i = x - 1;
-    j = y - 1;
-    while (j > 0 && i < t && plateau[j][i].type == -1)
+    j = y + 1;
+    while (i > 0 && j < t && plateau[j][i].type == -1)
     {
         actionpossible[index][0] = i;
         actionpossible[index][1] = j;
@@ -133,11 +133,11 @@ void interrogation_possible(int x, int y, int t, Pion plateau[t][t], int interro
     int pos_a_verif[4][2] = {{0,-1},{-1,0},{1,0},{0,1}};
     reset_tab(4, 2, interrogationpossible);
     for(int i = 0; i<4; i++){
-        x += pos_a_verif[i][0];
-        y += pos_a_verif[i][0];
-        if((plateau[y][x].type == CHEVALIER || plateau[y][x].type == ESPION) && plateau[y][x].couleur != couleur) {
-            interrogationpossible[i][0] = x ;
-            interrogationpossible[i][1] = y ;
+        int test_x = x +pos_a_verif[i][0];
+        int test_y = y + pos_a_verif[i][1];
+        if((plateau[test_y][test_x].type == CHEVALIER || plateau[test_y][test_x].type == ESPION) && plateau[test_y][test_x].couleur != couleur) {
+            interrogationpossible[i][0] = test_x ;
+            interrogationpossible[i][1] = test_y ;
         }
     }
 }
@@ -160,24 +160,45 @@ int deplacer_pion(int x_depart, int y_depart, int t, Pion plateau[t][t], int act
     return 1;
 }
 
-int victoire(int t, Pion plateau[t][t], int nbtour)
+int interroger_pion(int x, int y, int t, Pion plateau[t][t], int interrogationpossible[4][2], int x_enemie, int y_enemie, Couleur couleur) {
+    for(int i =0; i < 4; i++){
+        if (interrogationpossible[i][0] == x_enemie && interrogationpossible[i][1] == y_enemie) {
+            if(plateau[y_enemie][x_enemie].type == ESPION){
+                plateau[y_enemie][x_enemie].type = -1;
+                plateau[y_enemie][x_enemie].couleur = -1;
+                return 0;
+            }
+            plateau[y][x].type = -1;
+            plateau[y][x].couleur = -1;
+            return 1;
+        }
+    }
+    return 2;
+}
+
+
+
+int victoire(int t, Pion plateau[t][t])
 {
     /*
     Condition de victoire, parcoure tout le plateau et verifie s'il y a 2 espion ou pas,
     s'il y en a qu'un ou 0 la partie est fini donc on renvoie False, sinon True
     */
-
-    if (nbtour > 2)
-        return 0;
+    int listeespion[2][2];
     int nbespion = 0;
     for (int y = 0; y < t; y++)
     {
         for (int x = 0; x < t; x++)
         {
-            if (plateau[y][x].type == ESPION)
+            if (plateau[y][x].type == ESPION){
+                listeespion[nbespion][0] = x;
+                listeespion[nbespion][1] = y;
                 nbespion += 1;
+            }
         }
     }
+    if(nbespion < 2)
+        printf("\n \n Victoire des %s !\n \n", couleur_to_string(plateau[listeespion[0][1]][listeespion[0][0]].couleur));
     return nbespion == 2 ? 1 : 0;
 }
 
@@ -294,9 +315,12 @@ int main()
         printf("La taille du plateau est trop grande\n");
         return 1;
     }
-    //printf("Taille valide \n");
     int nbtour = 0;
     Couleur tour[] = {BLANC, NOIR};
+    /*int random=rand()%3+1;
+    for(int i = 0; i<random; i++){ (lignes qui choisis aleatoirement celui qui commence conformement a la consigne
+    changement_tour(2, tour);           enlever le temps des test)
+    }*/
     int chevalier;
     Pion plateau[T][T];
     chevalier = calculer_chevalier(T);
@@ -306,7 +330,7 @@ int main()
     placer_chevalier(T, plateau, chevalier);
     printf("Bienvenue dans Incognito \n");
     afficher_plateau(T, plateau);
-    while (victoire(T, plateau, nbtour) == 1)
+    while (victoire(T, plateau) == 1)
     {
         int pionselectionne[2] = {0, 0};
         int pion_arrive[2] = {0, 0};
@@ -330,19 +354,16 @@ int main()
             scanf("%d", &pionselectionne[0]);
             scanf("%d", &pionselectionne[1]);
         }
-
         deplacement_possible(pionselectionne[0], pionselectionne[1], T, plateau, actionpossible);
         interrogation_possible(pionselectionne[0], pionselectionne[1], T, plateau, interrogationpossible, tour[0]);
         printf("\n Les coups possible sont : \n");
         afficher_couppossible(T*4, actionpossible);
-        printf("\n");
         printf("\n Les interrogation possible sont : \n");
         afficher_couppossible(4, interrogationpossible);
         printf("\n");
         printf("Choisissez entre deplacement et interrogation (d ou i) : ");
         scanf("%c", &moov[0]);
         vider_buffer();
-        printf("%c", moov[0]);
         if(moov[0]=='d'){
             printf("Choisissez votre deplacement (Format : X Y ) : ");
             scanf("%d", &pion_arrive[0]);
@@ -357,7 +378,17 @@ int main()
             }
         }
         else if(moov[0]=='i'){
-            printf("scoobymachine");
+            printf("Choisissez le pion que vous souhaitez interroger (Format : X Y ) : ");
+            scanf("%d", &pion_arrive[0]);
+            scanf("%d", &pion_arrive[1]);
+            while (interroger_pion(pionselectionne[0], pionselectionne[1], T, plateau, interrogationpossible, pion_arrive[0], pion_arrive[1], tour[0]) == 2)
+            {
+                printf("interrogation impossible\n");
+                printf("Choisissez le pion que vous souhaitez interroger (Format : X Y ) : ");
+                vider_buffer();
+                scanf("%d", &pion_arrive[0]);
+                scanf("%d", &pion_arrive[1]);
+            }
         };
         afficher_plateau(T, plateau);
         nbtour += 1;
