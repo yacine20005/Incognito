@@ -39,4 +39,12 @@ typedef struct _jeu
     Couleur joueur;
 } Jeu;
 
+typedef struct {
+    char type; // 'D' pour déplacement, 'I' pour interrogation
+    int x_depart;
+    int y_depart;
+    int x_arrive;
+    int y_arrive;
+} Coup;
+
 #endif

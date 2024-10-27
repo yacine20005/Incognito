@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "types.h" 
+#include "types.h"
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +12,103 @@ int directions_haut[3][2] = {{0, 1}, {1, 0}, {1, 1}};
 
 // même chose pour le château en bas à droite
 int directions_bas[3][2] = {{0, -1}, {-1, 0}, {-1, -1}};
+
+void sauvegarder_partie(const char *nom_fichier, int t, Pion plateau[t][t], Couleur tour[2], int nb_coups, Coup coups[nb_coups], Couleur gagnant, int position_espion_blanc[2], int position_espion_noir[2], )
+{
+    FILE *fichier = fopen(nom_fichier, "w");
+    if (fichier == NULL)
+    {
+        printf("Erreur\n");
+        return;
+    }
+
+    fprintf(fichier, "B %d %d\n", position_espion_blanc[0], position_espion_blanc[1]);
+    fprintf(fichier, "N %d %d\n", position_espion_noir[0], position_espion_noir[1]);
+
+    fprintf(fichier, "%c\n", tour[0] == BLANC ? 'B' : 'N');
+
+    for (int i = 0; i < nb_coups; i++)
+    {
+        Coup coup = coups[i];
+        fprintf(fichier, "%c %d %d -> %d %d\n", coup.type, coup.x_depart, coup.y_depart, coup.x_arrive, coup.y_arrive);
+    }
+
+    if (gagnant == -1)
+    {
+        fprintf(fichier, "-1\n");
+    }
+    else if (gagnant == BLANC)
+    {
+        fprintf(fichier, "B\n");
+    }
+    else if (gagnant == NOIR)
+    {
+        fprintf(fichier, "N\n");
+    }
+    fclose(fichier);
+}
+
+void charger_partie(const char *nom_fichier, int t, Pion plateau[t][t], Couleur tour[2], int *nb_coups, Coup coups[100], Couleur *gagnant, int position_espion_blanc[2], int position_espion_noir[2])
+{
+    FILE *fichier = fopen(nom_fichier, "r");
+    if (fichier == NULL)
+    {
+        printf("Erreur\n");
+        return;
+    }
+
+    fscanf(fichier, "B %d %d\n", &position_espion_blanc[0], &position_espion_blanc[1]);
+    fscanf(fichier, "N %d %d\n", &position_espion_noir[0], &position_espion_noir[1]);
+
+    char joueur_actuel;
+    fscanf(fichier, "%c\n", &joueur_actuel);
+    tour[0] = (joueur_actuel == 'B') ? BLANC : NOIR;
+    tour[1] = (joueur_actuel == 'B') ? NOIR : BLANC;
+
+    *nb_coups = 0;
+    while (fscanf(fichier, "%c %d %d -> %d %d\n", &coups[*nb_coups].type, &coups[*nb_coups].x_depart, &coups[*nb_coups].y_depart, &coups[*nb_coups].x_arrive, &coups[*nb_coups].y_arrive) == 5)
+    {
+        (*nb_coups)++;
+    }
+
+    char joueur_gagnant;
+    fscanf(fichier, "%c\n", &joueur_gagnant);
+    if (joueur_gagnant == 'B')
+    {
+        *gagnant = BLANC;
+    }
+    else if (joueur_gagnant == 'N')
+    {
+        *gagnant = NOIR;
+    }
+    else
+    {
+        *gagnant = -1;
+    }
+
+    fclose(fichier);
+
+    generer_plateau(t, plateau);
+    placer_chateau(t, plateau);
+    placer_chevalier(t, plateau, calculer_chevalier(t), position_espion_blanc, position_espion_noir);
+
+    for (int i = 0; i < *nb_coups; i++)
+    {
+        Coup coup = coups[i];
+        if (coup.type == 'D')
+        {
+            int actionpossible[T * 4][2];
+            deplacement_possible(coup.x_depart, coup.y_depart, t, plateau, actionpossible);
+            deplacer_pion(coup.x_depart, coup.y_depart, t, plateau, actionpossible, coup.x_arrive, coup.y_arrive);
+        }
+        else if (coup.type == 'I')
+        {
+            int interrogationpossible[4][2];
+            interrogation_possible(coup.x_depart, coup.y_depart, t, plateau, interrogationpossible, tour[0]);
+            interroger_pion(coup.x_depart, coup.y_depart, t, plateau, interrogationpossible, coup.x_arrive, coup.y_arrive, tour[0]);
+        }
+    }
+}
 
 int changement_tour(int t, Couleur tour[t])
 {
@@ -45,7 +142,7 @@ void reset_tab(int ligne, int colonne, int tab[ligne][colonne])
 }
 
 int deplacement_possible_bidirection(int x, int y, int t, Pion plateau[t][t], int actionpossible[T * 4][2])
-{   
+{
     Couleur couleur = plateau[y][x].couleur;
     int index = 0;
     // Déplacement à droite
@@ -93,7 +190,7 @@ void deplacement_possible_diagonale(int x, int y, int t, Pion plateau[t][t], int
         j += 1;
     }
     i = x + 1;
-    j = y -1;
+    j = y - 1;
     while (i < t && j >= 0 && (plateau[j][i].type == -1 || (plateau[j][i].type == CHATEAU && plateau[j][i].couleur != couleur)))
     {
         actionpossible[index][0] = i;
@@ -131,7 +228,8 @@ int deplacer_pion(int x_depart, int y_depart, int t, Pion plateau[t][t], int act
     {
         if (actionpossible[i][0] == x_arrive && actionpossible[i][1] == y_arrive)
         {
-            if(plateau[y_arrive][x_arrive].type == CHATEAU && plateau[y_depart][x_depart].type == CHEVALIER) {
+            if (plateau[y_arrive][x_arrive].type == CHATEAU && plateau[y_depart][x_depart].type == CHEVALIER)
+            {
                 plateau[y_depart][x_depart].type = -1;
                 plateau[y_depart][x_depart].couleur = -1;
                 return 0;
@@ -154,27 +252,33 @@ void deplacement_possible(int x, int y, int t, Pion plateau[t][t], int actionpos
     deplacement_possible_diagonale(x, y, t, plateau, actionpossible, index);
 }
 
-void interrogation_possible(int x, int y, int t, Pion plateau[t][t], int interrogationpossible[4][2], Couleur couleur) {
-    int pos_a_verif[4][2] = {{0,-1},{-1,0},{1,0},{0,1}};
+void interrogation_possible(int x, int y, int t, Pion plateau[t][t], int interrogationpossible[4][2], Couleur couleur)
+{
+    int pos_a_verif[4][2] = {{0, -1}, {-1, 0}, {1, 0}, {0, 1}};
     reset_tab(4, 2, interrogationpossible);
-    for(int i = 0; i<4; i++){
-        int test_x = x +pos_a_verif[i][0];
+    for (int i = 0; i < 4; i++)
+    {
+        int test_x = x + pos_a_verif[i][0];
         int test_y = y + pos_a_verif[i][1];
-        if(test_x >= 0 && test_x < t && test_y >= 0 && test_y < t){
-        if((plateau[test_y][test_x].type == CHEVALIER || plateau[test_y][test_x].type == ESPION) && plateau[test_y][test_x].couleur != couleur) {
-            interrogationpossible[i][0] = test_x ;
-            interrogationpossible[i][1] = test_y ;
-        }
+        if (test_x >= 0 && test_x < t && test_y >= 0 && test_y < t)
+        {
+            if ((plateau[test_y][test_x].type == CHEVALIER || plateau[test_y][test_x].type == ESPION) && plateau[test_y][test_x].couleur != couleur)
+            {
+                interrogationpossible[i][0] = test_x;
+                interrogationpossible[i][1] = test_y;
+            }
         }
     }
 }
 
-
-
-int interroger_pion(int x, int y, int t, Pion plateau[t][t], int interrogationpossible[4][2], int x_enemie, int y_enemie, Couleur couleur) {
-    for(int i =0; i < 4; i++){
-        if (interrogationpossible[i][0] == x_enemie && interrogationpossible[i][1] == y_enemie) {
-            if(plateau[y_enemie][x_enemie].type == ESPION){
+int interroger_pion(int x, int y, int t, Pion plateau[t][t], int interrogationpossible[4][2], int x_enemie, int y_enemie, Couleur couleur)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (interrogationpossible[i][0] == x_enemie && interrogationpossible[i][1] == y_enemie)
+        {
+            if (plateau[y_enemie][x_enemie].type == ESPION)
+            {
                 plateau[y_enemie][x_enemie].type = -1;
                 plateau[y_enemie][x_enemie].couleur = -1;
                 return 0;
@@ -186,8 +290,6 @@ int interroger_pion(int x, int y, int t, Pion plateau[t][t], int interrogationpo
     }
     return 2;
 }
-
-
 
 int victoire(int t, Pion plateau[t][t])
 {
@@ -203,21 +305,23 @@ int victoire(int t, Pion plateau[t][t])
     {
         for (int x = 0; x < t; x++)
         {
-            if (plateau[y][x].type == ESPION){
+            if (plateau[y][x].type == ESPION)
+            {
                 listeespion[nbespion][0] = x;
                 listeespion[nbespion][1] = y;
                 nbespion += 1;
             }
-            if (plateau[y][x].type == CHATEAU){
+            if (plateau[y][x].type == CHATEAU)
+            {
                 listechateau[nbchateau][0] = x;
                 listechateau[nbchateau][1] = y;
                 nbchateau += 1;
             }
         }
     }
-    if(nbchateau < 2)
+    if (nbchateau < 2)
         printf("\n \n Victoire des %s, votre espion est rentrée dans le chateau !\n \n", couleur_to_string(plateau[listechateau[0][1]][listechateau[0][0]].couleur));
-    else if(nbespion < 2)
+    else if (nbespion < 2)
         printf("\n \n Victoire des %s, vous avez demasquée l'espion adverse !\n \n", couleur_to_string(plateau[listeespion[0][1]][listeespion[0][0]].couleur));
     return nbespion == 2 ? 1 : 0;
 }
@@ -249,7 +353,7 @@ void placer_chateau(int t, Pion plateau[t][t])
     plateau[t - 1][t - 1].couleur = NOIR;
 }
 
-void placer_chevalier_autour_chateau(int t, Pion plateau[t][t], int x, int y, int chevalier, int directions[3][2], Couleur Couleur)
+void placer_chevalier_autour_chateau(int t, Pion plateau[t][t], int x, int y, int chevalier, int directions[3][2], Couleur Couleur, int position_espion[2])
 {
     srand(time(NULL));
     int nbrandomblanc = rand() % chevalier + 1;
@@ -263,9 +367,17 @@ void placer_chevalier_autour_chateau(int t, Pion plateau[t][t], int x, int y, in
             if (nx >= 0 && nx < t && ny >= 0 && ny < t && plateau[nx][ny].type == -1) // On verifie si on est sur le plateau et si la case est pas déjà occupé par un frero
             {
                 if (chevalier == nbrandomblanc && Couleur == BLANC)
+                {
                     plateau[nx][ny].type = ESPION;
+                    position_espion[0] = nx;
+                    position_espion[1] = ny;
+                }
                 else if (chevalier == nbrandomnoir && Couleur == NOIR)
+                {
                     plateau[nx][ny].type = ESPION;
+                    position_espion[0] = nx;
+                    position_espion[1] = ny;
+                }
                 else
                     plateau[nx][ny].type = CHEVALIER;
                 plateau[nx][ny].couleur = Couleur;
@@ -275,17 +387,18 @@ void placer_chevalier_autour_chateau(int t, Pion plateau[t][t], int x, int y, in
     }
 }
 
-void placer_chevalier(int t, Pion plateau[t][t], int chevalier) // Pour placer les chevalier des deux camps
+void placer_chevalier(int t, Pion plateau[t][t], int chevalier, int position_espion_blanc[2], int position_espion_noir[2]) // Pour placer les chevalier des deux camps
 {
-    placer_chevalier_autour_chateau(t, plateau, 0, 0, chevalier, directions_haut, BLANC);
-    placer_chevalier_autour_chateau(t, plateau, t - 1, t - 1, chevalier, directions_bas, NOIR);
+    placer_chevalier_autour_chateau(t, plateau, 0, 0, chevalier, directions_haut, BLANC, position_espion_blanc);
+    placer_chevalier_autour_chateau(t, plateau, t - 1, t - 1, chevalier, directions_bas, NOIR, position_espion_noir);
 }
 
 void afficher_plateau(int t, Pion plateau[t][t])
 {
     for (int i = 0; i < t; i++)
     {
-        for (int a = 0; a < 2.2 * t; a++) {
+        for (int a = 0; a < 2.2 * t; a++)
+        {
             printf("-");
         }
         printf("\n");
@@ -312,7 +425,8 @@ void afficher_plateau(int t, Pion plateau[t][t])
         printf("|");
         printf("\n");
     }
-    for (int a = 0; a < 2.2 * T; a++) {
+    for (int a = 0; a < 2.2 * T; a++)
+    {
         printf("-");
     }
     printf("\n");
@@ -339,55 +453,32 @@ void vider_buffer()
 int main(int argc, char *argv[])
 {
     srand(time(NULL));
-    /*int chargerPartie = 0; // variable pour indiquer si on doit charger une partie
-    int sauvegarderPartie = 0; // variable pour indiquer si on doit sauvegarder chaque coup
-    FILE* fichierSauvegarde = NULL;
-    FILE* fichierChargement = NULL;
-    // Vérification des arguments de la ligne de commande
-    for (int i = 0; i < argc; i++) {
-        if (strcmp(argv[i], "-c") == 0 && i + 1 < argc) {
-            fichierChargement = fopen(argv[i + 1], "r");  // Ouvre le fichier pour charger la partie
-            if (fichierChargement == NULL) {
-                printf("Une erreur s'est produite pendant l'ouverture du fichier de chargemnt \n");
-                return 1;
-            }
-            chargerPartie = 1; // Active le chargement de la partie
-            i++;  // Saute l'argument suivant qui est le chemin
-        if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) {
-            fichierSauvegarde = fopen(argv[i + 1], "w");  // Ouvre le fichier de sauvegarde
-            if (fichierSauvegarde == NULL) {
-                printf("Une erreur s'est produite pendant l'ouverture du fichier de sauvegarde \n");
-                return 1;
-            }
-            sauvegarderPartie = 1; // Active la sauvegarde
-            i++;  // Saute l'argument suivant qui est le chemin
-        }
-        }
-    }*/
-
-
     int t = T;
     if (t >= 8) // On vérifie si T est pas plus grand que 8 car c'est interdit par la consigne
     {
         printf("La taille du plateau est trop grande\n");
         return 1;
     }
-
-
     Couleur tour[2] = {BLANC, NOIR};
-    int random=rand()%3+1;
-    for(int i = 0; i<random; i++){
-    changement_tour(2, tour);
+    if (rand() % 2 == 0)
+    {
+        changement_tour(2, tour);
     }
     int chevalier;
     Pion plateau[T][T];
+    int position_espion_blanc[2];
+    int position_espion_noir[2];
     chevalier = calculer_chevalier(T);
     generer_plateau(T, plateau);
     placer_chateau(T, plateau);
-    placer_chevalier(T, plateau, chevalier);
-
+    placer_chevalier(T, plateau, chevalier, position_espion_blanc, position_espion_noir);
     printf("Bienvenue dans Incognito \n");
     afficher_plateau(T, plateau);
+
+    int nb_coups = 0;
+    Coup coups[100];
+    Couleur gagnant = -1;
+
     while (victoire(T, plateau) == 1)
     {
         int pionselectionne[2] = {0, 0};
@@ -396,14 +487,13 @@ int main(int argc, char *argv[])
         int interrogationpossible[4][2];
         char moov[1];
         printf("\n Joueur %s, quelle pion voulez vous selectionner (Format : X Y ) : ", couleur_to_string(tour[0]));
-
         scanf("%d", &pionselectionne[0]);
         scanf("%d", &pionselectionne[1]);
         vider_buffer();
         printf("La piece selectionnee est (%d,%d)\n", pionselectionne[0], pionselectionne[1]);
-
-        while ((plateau[pionselectionne[1]][pionselectionne[0]].type != CHEVALIER && plateau[pionselectionne[1]][pionselectionne[0]].type != ESPION) ||
-               (plateau[pionselectionne[1]][pionselectionne[0]].couleur != tour[0]))
+        int type_pion = plateau[pionselectionne[1]][pionselectionne[0]].type;
+        Couleur couleur_pion = plateau[pionselectionne[1]][pionselectionne[0]].couleur;
+        while ((type_pion != CHEVALIER && type_pion != ESPION) || (couleur_pion != tour[0]))
         {
             afficher_plateau(T, plateau);
             printf("Entree invalide veuillez recommencez \n (Soit ce n'est pas un pion de votre couleur, soit l'entree est hors du plateau)");
@@ -411,23 +501,27 @@ int main(int argc, char *argv[])
             vider_buffer(); // temporairement c'est chagpt qui l'as fait prcq la boucle infinie elle clc
             scanf("%d", &pionselectionne[0]);
             scanf("%d", &pionselectionne[1]);
+            int type_pion = plateau[pionselectionne[1]][pionselectionne[0]].type;
+            Couleur couleur_pion = plateau[pionselectionne[1]][pionselectionne[0]].couleur;
         }
         deplacement_possible(pionselectionne[0], pionselectionne[1], T, plateau, actionpossible);
         interrogation_possible(pionselectionne[0], pionselectionne[1], T, plateau, interrogationpossible, tour[0]);
         printf("\n Les coups possible sont : \n");
-        afficher_couppossible(T*4, actionpossible);
+        afficher_couppossible(T * 4, actionpossible);
         printf("\n Les interrogation possible sont : \n");
         afficher_couppossible(4, interrogationpossible);
         printf("\n");
         printf("Choisissez entre deplacement et interrogation (d ou i) : ");
         scanf("%c", &moov[0]);
-        while(moov[0] != 'd' && moov[0] != 'i'){
+        while (moov[0] != 'd' && moov[0] != 'i')
+        {
             printf("Entree invalide veuillez recommencez (d ou i) :  ");
             vider_buffer(); // temporairement c'est chagpt qui l'as fait prcq la boucle infinie elle clc
             scanf("%c", &moov[0]);
         }
         vider_buffer();
-        if(moov[0]=='d'){
+        if (moov[0] == 'd')
+        {
             printf("Choisissez votre deplacement (Format : X Y ) : ");
             scanf("%d", &pion_arrive[0]);
             scanf("%d", &pion_arrive[1]);
@@ -439,8 +533,10 @@ int main(int argc, char *argv[])
                 scanf("%d", &pion_arrive[0]);
                 scanf("%d", &pion_arrive[1]);
             }
+            coups[nb_coups++] = (Coup){'D', pionselectionne[0], pionselectionne[1], pion_arrive[0], pion_arrive[1]};
         }
-        else if(moov[0]=='i'){
+        else if (moov[0] == 'i')
+        {
             printf("Choisissez le pion que vous souhaitez interroger (Format : X Y ) : ");
             scanf("%d", &pion_arrive[0]);
             scanf("%d", &pion_arrive[1]);
@@ -452,9 +548,13 @@ int main(int argc, char *argv[])
                 scanf("%d", &pion_arrive[0]);
                 scanf("%d", &pion_arrive[1]);
             }
+            coups[nb_coups++] = (Coup){'I', pionselectionne[0], pionselectionne[1], pion_arrive[0], pion_arrive[1]};
         };
         afficher_plateau(T, plateau);
         changement_tour(2, tour);
     }
+
+    sauvegarder_partie("sauvegarde.inco", T, plateau, tour, nb_coups, coups, gagnant, position_espion_blanc, position_espion_noir);
+    printf("Partie sauvegardée\n");
     return 0;
 }
