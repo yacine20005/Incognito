@@ -2,7 +2,7 @@
 
 ## Incognito
 
-Nous nous proposons d’implémenter en C un jeu à deux joueurs à information incomplète, c’est-à-dire où chaque joueur ignore certains éléments de la position de jeu.
+Incognito est un jeu de plateau à deux joueurs où chaque joueur possède un château et un espion caché parmi ses pions. Le but du jeu est de découvrir l'espion adverse et de le capturer ou de faire entrer son propre espion dans le château adverse.
 
 ### 1. Le jeu Incognito
 
@@ -161,4 +161,48 @@ Un rapport sera à rendre avec votre code. Celui-ci contiendra quatre parties :
     2. Des difficultés rencontrées et de leurs résolutions ;
 - Les potentielles améliorations réalisées.
 
-**Rédigé par GitHub Copilot**
+### 5. Structure du code
+
+Le code du projet est organisé en plusieurs fichiers, chacun ayant un rôle spécifique :
+
+- `plateau.c` : Contient les fonctions principales du jeu, y compris l'affichage du plateau, les déplacements des pions, les interrogations, la sauvegarde et le chargement des parties.
+- `types.h` : Définit les types de données utilisés dans le jeu, tels que les pions, les couleurs, les types de pions, etc.
+- `README.md` : Ce fichier, contenant la description du projet, les règles du jeu, les instructions de compilation et d'exécution, etc.
+
+### 6. Compilation et exécution
+
+Pour compiler le projet, vous pouvez utiliser la commande suivante :
+
+```sh
+gcc -o incognito plateau.c
+```
+
+Pour exécuter le jeu, utilisez la commande suivante :
+
+```sh
+./incognito
+```
+
+### 7. Options de ligne de commande
+
+Le jeu accepte plusieurs options de ligne de commande pour charger et sauvegarder des parties, ainsi que pour activer le mode debug :
+
+- `-c <fichier>` : Charger une partie à partir d'un fichier.
+- `-s <fichier>` : Sauvegarder la partie dans un fichier.
+- `-d` : Activer le mode debug.
+
+Exemples d'utilisation :
+
+```sh
+./incognito -c sauvegarde.inco
+./incognito -s sauvegarde.inco
+./incognito -d
+```
+
+### 8. Sauvegarde et chargement des parties
+
+Le jeu permet de sauvegarder et de charger des parties à partir de fichiers. Les fonctions `sauvegarder_partie` et `charger_partie` dans `plateau.c` sont responsables de ces opérations.
+
+### 9. Auteurs
+
+Ce projet a été réalisé par Yacine HAMADOUCHE et Liam GAVAU--PELISSIER.
